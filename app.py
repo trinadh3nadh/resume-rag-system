@@ -6,7 +6,6 @@ from PyPDF2 import PdfReader
 from retriever import retrieve_top_chunks
 from reranker import rerank_chunks
 from scorer import compute_structured_score
-from llm_feedback import generate_rag_feedback
 
 # -----------------------------
 # Streamlit Config
@@ -21,13 +20,13 @@ logging.basicConfig(level=logging.INFO)
 st.title("🚀 Resume Intelligence RAG System")
 
 # -----------------------------
-# File Upload + JD Input
+# Inputs
 # -----------------------------
 uploaded_file = st.file_uploader("Upload Resume (PDF)", type="pdf")
 job_description = st.text_area("Paste Job Description")
 
 # -----------------------------
-# Cached Retrieval
+# Caching Layer
 # -----------------------------
 @st.cache_data(show_spinner=False)
 def cached_retrieval(resume_text, job_description):
@@ -64,9 +63,7 @@ if uploaded_file and job_description:
 
     # ---- Retrieval ----
     start_retrieval = time.time()
-
     retrieved_chunks = cached_retrieval(resume_text, job_description)
-
     retrieval_time = time.time() - start_retrieval
 
     if not retrieved_chunks:
@@ -75,32 +72,59 @@ if uploaded_file and job_description:
 
     # ---- Reranking ----
     start_rerank = time.time()
-
     ranked_chunks = cached_reranking(job_description, retrieved_chunks)
-
     rerank_time = time.time() - start_rerank
 
     # ---- Structured Scoring ----
     scores = compute_structured_score(ranked_chunks)
 
-    st.subheader("📊 Structured Scores")
-    st.json(scores)
+    st.subheader("🎯 Final Resume Match Evaluation")
 
-    # ---- Latency Display ----
-    st.subheader("⏱ Latency Metrics")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            label="Match Score",
+            value=f"{scores['percentage_score']}%"
+        )
+
+    with col2:
+        st.metric(
+            label="Match Rating",
+            value=scores["rating"]
+        )
+
+    with col3:
+        st.metric(
+            label="Confidence",
+            value=f"{scores['confidence']}%"
+        )
+
+    # ---- Rating Message ----
+    if scores["rating"] == "Excellent Match":
+        st.success("Your resume is strongly aligned with this role.")
+    elif scores["rating"] == "Good Match":
+        st.info("Your resume is well aligned. Minor improvements could strengthen it further.")
+    elif scores["rating"] == "Moderate Match":
+        st.warning("Your resume partially matches this role. Consider refining skills and experience.")
+    else:
+        st.error("Your resume has low alignment with this job description.")
+
+    # ---- Latency Metrics ----
+    st.subheader("⏱ System Performance Metrics")
     st.write({
         "retrieval_time_sec": round(retrieval_time, 3),
-        "rerank_time_sec": round(rerank_time, 3)
+        "rerank_time_sec": round(rerank_time, 3),
+        "total_pipeline_time_sec": round(time.time() - start_total, 3)
     })
 
-    # ---- Top Resume Sections ----
+    # ---- Top Relevant Sections ----
     st.subheader("🔎 Top Relevant Resume Sections")
 
     for chunk, score in ranked_chunks[:5]:
-        st.markdown(f"**Relevance Score:** {round(float(score), 3)}")
-        st.write(chunk)
         st.markdown("---")
+        st.write(chunk)
 
-    # ---- LLM Evaluation ----
+    # ---- LLM Disabled for Cloud ----
     if st.button("Generate AI Evaluation"):
         st.info("LLM evaluation is available in the local version only.")
