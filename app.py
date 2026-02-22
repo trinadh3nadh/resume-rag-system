@@ -17,7 +17,17 @@ st.set_page_config(
 
 logging.basicConfig(level=logging.INFO)
 
-st.title("🚀 Resume Intelligence RAG System")
+# -----------------------------
+# Header Branding
+# -----------------------------
+st.markdown(
+    """
+    # 🚀 Resume Intelligence RAG System  
+    ### Built by **Trinadh Kolluboyina**
+    AI Engineer | GenAI | RAG Systems | Agentic AI
+    ---
+    """
+)
 
 # -----------------------------
 # Inputs
@@ -128,3 +138,14 @@ if uploaded_file and job_description:
     # ---- LLM Disabled for Cloud ----
     if st.button("Generate AI Evaluation"):
         st.info("LLM evaluation is available in the local version only.")
+
+# -----------------------------
+# Footer
+# -----------------------------
+st.markdown(
+    """
+    ---
+    Built with ❤️ using SentenceTransformers, FAISS, Cross-Encoders, and Streamlit  
+    © 2026 Trinadh Kolluboyina
+    """
+)
