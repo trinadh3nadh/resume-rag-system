@@ -23,8 +23,8 @@ logging.basicConfig(level=logging.INFO)
 st.markdown(
     """
     # 🚀 Resume Intelligence RAG System  
-    ### Built by **Trinadh Kolluboyina**
-    AI Engineer | GenAI | RAG Systems | Agentic AI
+    ### Built by **Trinadh Kolluboyina**  
+    AI Engineer | GenAI | RAG Systems | Agentic AI  
     ---
     """
 )
@@ -33,7 +33,16 @@ st.markdown(
 # Inputs
 # -----------------------------
 uploaded_file = st.file_uploader("Upload Resume (PDF)", type="pdf")
-job_description = st.text_area("Paste Job Description")
+
+job_description = st.text_area(
+    "Paste Job Description",
+    placeholder="Paste the full job description here..."
+)
+
+analyze_button = st.button(
+    "🔍 Analyze Resume",
+    disabled=not (uploaded_file and job_description.strip())
+)
 
 # -----------------------------
 # Caching Layer
@@ -49,7 +58,7 @@ def cached_reranking(job_description, retrieved_chunks):
 # -----------------------------
 # Main Pipeline
 # -----------------------------
-if uploaded_file and job_description:
+if analyze_button:
 
     start_total = time.time()
 
@@ -128,16 +137,12 @@ if uploaded_file and job_description:
         "total_pipeline_time_sec": round(time.time() - start_total, 3)
     })
 
-    # ---- Top Relevant Sections ----
+    # ---- Top Relevant Resume Sections ----
     st.subheader("🔎 Top Relevant Resume Sections")
 
     for chunk, score in ranked_chunks[:5]:
         st.markdown("---")
         st.write(chunk)
-
-    # ---- LLM Disabled for Cloud ----
-    if st.button("Generate AI Evaluation"):
-        st.info("LLM evaluation is available in the local version only.")
 
 # -----------------------------
 # Footer
